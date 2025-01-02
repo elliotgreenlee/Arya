@@ -26,6 +26,7 @@ https://developers.google.com/apis-explorer
 ### Search
 * Knowledge graph API: search knowledge graph entities. https://developers.google.com/knowledge-graph/reference/rest/v1/ 
 * Custom search API: make custom searches with json. https://developers.google.com/custom-search/v1/introduction/ 
+* Google search console API:
 
 ## OpenAI
 * standard model https://platform.openai.com/docs/models/gpt-4o
@@ -35,8 +36,14 @@ https://developers.google.com/apis-explorer
 * AI assistants https://platform.openai.com/docs/assistants/overview
 
 ## Things
-https://github.com/evelion-apps/things-api read only
+* https://github.com/evelion-apps/things-api read only
 
 ## Obsidian
-https://github.com/coddingtonbear/obsidian-local-rest-api 
-https://github.com/jk-oster/obsidian-search-for-web 
+* https://github.com/coddingtonbear/obsidian-local-rest-api 
+* https://github.com/jk-oster/obsidian-search-for-web 
+
+## OpenWeather
+* https://openweathermap.org/api/one-call-3 in use
+* 1000 calls/month for free, then 0.015/100 calls
+* https://openweathermap.org/api/one-call-3#current
+* https://openweathermap.org/api/one-call-3#history_daily_aggregation for historical and daily aggregation
