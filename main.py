@@ -3,13 +3,56 @@ import os.path
 import requests
 import json
 from datetime import datetime, timedelta
+import pandas as pd
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 # Scopes define the level of access your application requires
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar.readonly',
+          'https://www.googleapis.com/auth/spreadsheets.readonly']
+
+API_KEYS_PATH = 'Credentials/api_keys.json'
+
+ELLIOT_GOOGLE_CREDENTIALS_PATH = 'Credentials/elliot_google_user_token.json'
+CLIENT_GOOGLE_CREDENTIALS_PATH = 'Credentials/google_client.json'
+
+# Portland, OR
+USER_LATITUDE = 45.5152
+USER_LONGITUDE = -122.6784
+
+
+def load_google_credentials(user_credentials_path, api_credentials_path):
+    # Check if there are stored user credentials
+    creds = None
+    if os.path.exists(user_credentials_path):
+        creds = Credentials.from_authorized_user_file(user_credentials_path, SCOPES)
+
+    # If there are no valid credentials, prompt for login
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(api_credentials_path, SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open(user_credentials_path, 'w') as token:
+            token.write(creds.to_json())
+
+    return creds
+
+
+def connect_to_google_calendar(credentials):
+    # Initialize the Calendar API
+    google_calendar = build('calendar', 'v3', credentials=credentials)
+    return google_calendar
+
+
+def connect_to_google_sheets(credentials):
+    # Initialize the Sheets API
+    google_sheets = build('sheets', 'v4', credentials=credentials)
+    return google_sheets
 
 
 def calendar_events(calendar_service, time_min, time_max):
@@ -67,59 +110,13 @@ def next_two_weeks_calendar(calendar_service):
     calendar_events(calendar_service, time_min, time_max)
 
 
-def connect_to_google_calendar():
-    token_path = 'Credentials/token.json'
-    credentials_path = 'Credentials/client_secret.apps.googleusercontent.com.json'
-
-    # Check if Credentials/token.json exists for stored credentials
-    creds = None
-    if os.path.exists(token_path):
-        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-
-    # If there are no valid credentials, prompt for login
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                credentials_path, SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open(token_path, 'w') as token:
-            token.write(creds.to_json())
-
-    # Initialize the Calendar API
-    google_calendar = build('calendar', 'v3', credentials=creds)
-    return google_calendar
-
-
-def load_api_key(file_path):
-    """
-    Loads the OpenWeather API key from a JSON file.
-
-    Parameters:
-    - file_path (str): Path to the JSON file containing the API key.
-
-    Returns:
-    - str: The API key.
-    """
+def load_api_keys(file_path):
     with open(file_path, 'r') as file:
-        data = json.load(file)
-        return data['api_key']
+        api_keys = json.load(file)
+        return api_keys
 
 
 def next_eight_days_weather(api_key, lat, lon):
-    """
-    Fetches daily weather forecasts from OpenWeather for a given time range.
-
-    Parameters:
-    - api_key (str): Your OpenWeather API key.
-    - lat (float): Latitude of the location.
-    - lon (float): Longitude of the location.
-
-    Returns:
-    - List of dictionaries containing weather data for each day
-    """
     # OpenWeather One Call API endpoint
     url = f"https://api.openweathermap.org/data/3.0/onecall"
 
@@ -165,17 +162,171 @@ def next_eight_days_weather(api_key, lat, lon):
         print("-------------")
 
 
-def main():
-    calendar_service = connect_to_google_calendar()
-    last_week_calendar(calendar_service)
-    next_two_weeks_calendar(calendar_service)
+def load_google_sheet_to_dataframe(sheets_service, spreadsheet_id, spreadsheet_range, column_types=None):
+    sheet = sheets_service.spreadsheets()
 
-    # Example: Portland, OR
-    portland_latitude = 45.5152
-    portland_longitude = -122.6784
-    openweather_api_key = load_api_key('Credentials/openweather_api_key.json')
-    # Commented out so I don't use up 1000 call quota
-    # next_eight_days_weather(openweather_api_key, portland_latitude, portland_longitude)
+    # Read data from the specified range
+    result = sheet.values().get(spreadsheetId=spreadsheet_id, range=spreadsheet_range).execute()
+    values = result.get('values', [])
+
+    # If no data, return an empty DataFrame
+    if not values:
+        return pd.DataFrame()
+
+    # Create a DataFrame
+    df = pd.DataFrame(values[1:], columns=values[0])  # Use the first row as column names
+
+    # Apply column types if specified
+    if column_types:
+        for column, dtype in column_types.items():
+            if column in df.columns:
+                df[column] = df[column].astype(dtype)
+
+    return df
+
+
+def last_week_workout(sheets_service):
+    # https://docs.google.com/spreadsheets/d/<spreadsheet_id>/edit
+    training_spreadsheet_id = '1JFpTX7CfaQ-GYvUSiq6dA397tgVxM1v3x_s2vA_UIeQ'
+    training_spreadsheet_range = 'Weekly Training!A1:X25'
+    training_column_types = {
+        'Week': str,
+        'Week Start': str,
+        'Day 1': str,
+        'Day 1 Data': str,
+        'Day 2': str,
+        'Day 2 Data': str,
+        'Day 3': str,
+        'Day 3 Data': str,
+        'Day 4': str,
+        'Day 4 Data': str,
+        'Day 5': str,
+        'Day 5 Data': str,
+        'Day 6': str,
+        'Day 6 Data': str,
+        'Day 7': str,
+        'Day 7 Data': str,
+        'Run Distance': str,
+        'Bike Distance': str,
+        'Swim Distance': str,
+        'Total Distance': str,
+        'Total Time': str,
+        'Running Goal': str,
+        'Biking Goal': str,
+        'Swimming Goal': str
+    }
+
+    # Load data into a Pandas DataFrame
+    df = load_google_sheet_to_dataframe(sheets_service, training_spreadsheet_id,
+                                        training_spreadsheet_range,
+                                        column_types=training_column_types)
+
+    df['Week Start'] = pd.to_datetime(df['Week Start'], format="%Y/%m/%d")
+
+    # Get today's date in PST
+    today_pst = pd.Timestamp(datetime.now())
+    start_date = today_pst - timedelta(days=13)
+    end_date = today_pst - timedelta(days=6)
+
+    last_week = df[(df['Week Start'] >= start_date) &
+                   (df['Week Start'] <= end_date)]
+
+    pd.set_option('display.max_columns', None)  # Show all columns
+    display_columns = ['Week', 'Week Start', 'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7']
+
+    if not last_week.empty:
+        print(last_week[display_columns])
+    else:
+        print("No exercise plan for last week.")
+
+
+def next_week_workout(sheets_service):
+    # https://docs.google.com/spreadsheets/d/<spreadsheet_id>/edit
+    training_spreadsheet_id = '1JFpTX7CfaQ-GYvUSiq6dA397tgVxM1v3x_s2vA_UIeQ'
+    training_spreadsheet_range = 'Weekly Training!A1:X25'
+    training_column_types = {
+        'Week': str,
+        'Week Start': str,
+        'Day 1': str,
+        'Day 1 Data': str,
+        'Day 2': str,
+        'Day 2 Data': str,
+        'Day 3': str,
+        'Day 3 Data': str,
+        'Day 4': str,
+        'Day 4 Data': str,
+        'Day 5': str,
+        'Day 5 Data': str,
+        'Day 6': str,
+        'Day 6 Data': str,
+        'Day 7': str,
+        'Day 7 Data': str,
+        'Run Distance': str,
+        'Bike Distance': str,
+        'Swim Distance': str,
+        'Total Distance': str,
+        'Total Time': str,
+        'Running Goal': str,
+        'Biking Goal': str,
+        'Swimming Goal': str
+    }
+
+    # Load data into a Pandas DataFrame
+    df = load_google_sheet_to_dataframe(sheets_service, training_spreadsheet_id,
+                                        training_spreadsheet_range,
+                                        column_types=training_column_types)
+
+    df['Week Start'] = pd.to_datetime(df['Week Start'], format="%Y/%m/%d")
+
+    # Get today's date in PST
+    today_pst = pd.Timestamp(datetime.now())
+
+    next_week = df[(df['Week Start'] >= today_pst - timedelta(days=6))
+                   & (df['Week Start'] <= today_pst + timedelta(days=1))]
+
+    pd.set_option('display.max_columns', None)  # Show all columns
+    display_columns = ['Week', 'Week Start', 'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7']
+    if not next_week.empty:
+        print(next_week[display_columns])
+    else:
+        print("No exercise plan for next week.")
+
+
+def main():
+    api_keys = load_api_keys(API_KEYS_PATH)
+
+    google_credentials = load_google_credentials(
+        ELLIOT_GOOGLE_CREDENTIALS_PATH,
+        CLIENT_GOOGLE_CREDENTIALS_PATH)
+
+    # Calendar data
+    calendar_service = connect_to_google_calendar(google_credentials)
+    print("-------------------------------------------------------------------")
+    print("Last week calendar")
+    print("-------------------------------------------------------------------")
+    last_week_calendar(calendar_service)
+    print("-------------------------------------------------------------------")
+    print("Next 2 weeks calendar")
+    print("-------------------------------------------------------------------")
+    next_two_weeks_calendar(calendar_service)
+    print("-------------------------------------------------------------------")
+    print("Next 8 days weather")
+    print("-------------------------------------------------------------------")
+
+    # Weather data
+    next_eight_days_weather(api_keys['openweather_api_key'], USER_LATITUDE, USER_LONGITUDE)
+
+    print("-------------------------------------------------------------------")
+    print("Last weeks workout")
+    print("-------------------------------------------------------------------")
+
+    # Sheets data
+    sheets_service = connect_to_google_sheets(google_credentials)
+    last_week_workout(sheets_service)
+    print("-------------------------------------------------------------------")
+    print ("Next weeks workout")
+    print("-------------------------------------------------------------------")
+    next_week_workout(sheets_service)
 
 
 if __name__ == '__main__':

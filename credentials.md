@@ -1,6 +1,6 @@
 
 https://console.cloud.google.com/auth/clients
-[client_secret.apps.googleusercontent.com.json](Credentials/client_secret.apps.googleusercontent.com.json)
+[client_secret.apps.googleusercontent.com.json](Credentials/google_client.json)
 
 https://myaccount.google.com/
 [token.json](Credentials%2Ftoken.json)
