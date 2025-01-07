@@ -8,6 +8,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from openai import OpenAI
 
 # Scopes define the level of access your application requires
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly',
@@ -299,34 +300,33 @@ def main():
         ELLIOT_GOOGLE_CREDENTIALS_PATH,
         CLIENT_GOOGLE_CREDENTIALS_PATH)
 
+    '''
     # Calendar data
     calendar_service = connect_to_google_calendar(google_credentials)
-    print("-------------------------------------------------------------------")
-    print("Last week calendar")
-    print("-------------------------------------------------------------------")
     last_week_calendar(calendar_service)
-    print("-------------------------------------------------------------------")
-    print("Next 2 weeks calendar")
-    print("-------------------------------------------------------------------")
     next_two_weeks_calendar(calendar_service)
-    print("-------------------------------------------------------------------")
-    print("Next 8 days weather")
-    print("-------------------------------------------------------------------")
 
     # Weather data
     next_eight_days_weather(api_keys['openweather_api_key'], USER_LATITUDE, USER_LONGITUDE)
 
-    print("-------------------------------------------------------------------")
-    print("Last weeks workout")
-    print("-------------------------------------------------------------------")
-
     # Sheets data
     sheets_service = connect_to_google_sheets(google_credentials)
     last_week_workout(sheets_service)
-    print("-------------------------------------------------------------------")
-    print ("Next weeks workout")
-    print("-------------------------------------------------------------------")
     next_week_workout(sheets_service)
+    '''
+
+    # OpenAI
+
+    client = OpenAI(api_key=api_keys['openai_api_key'])
+    completion = client.chat.completions.create(
+        model="gpt-4o",
+        store=True,
+        messages=[
+            {"role": "user", "content": "write a haiku about ai"}
+        ]
+    )
+
+    print(completion)
 
 
 if __name__ == '__main__':
