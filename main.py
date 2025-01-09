@@ -9,6 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from openai import OpenAI
+import requests
 
 # Scopes define the level of access your application requires
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly',
@@ -315,8 +316,8 @@ def main():
     next_week_workout(sheets_service)
     '''
 
+    '''
     # OpenAI
-
     client = OpenAI(api_key=api_keys['openai_api_key'])
     completion = client.chat.completions.create(
         model="gpt-4o",
@@ -327,6 +328,40 @@ def main():
     )
 
     print(completion)
+    '''
+
+    # Spoonacular
+
+    # Set up the API key and base URL
+    api_key = api_keys['spoonacular_api_key']
+    base_url = "https://api.spoonacular.com"
+
+    # Get random recipes
+    endpoint = f"{base_url}/recipes/random"
+    params = {
+        "apiKey": api_key,
+        "number": 1  # Number of random recipes to retrieve
+    }
+
+    try:
+        # Make the GET request
+        response = requests.get(endpoint, params=params)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        # Parse the JSON response
+        data = response.json()
+
+        # Print a summary of the recipe
+        if "recipes" in data and data["recipes"]:
+            recipe = data["recipes"][0]
+            print(f"Recipe Name: {recipe['title']}")
+            print(f"Ready in Minutes: {recipe['readyInMinutes']}")
+            print(f"Servings: {recipe['servings']}")
+            print(f"Summary: {recipe['summary']}")
+        else:
+            print("No recipes found.")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == '__main__':

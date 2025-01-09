@@ -20,8 +20,7 @@ https://developers.google.com/apis-explorer
 * Cloud Speech to Text API: convert speech to text. https://cloud.google.com/speech-to-text/docs/reference/rest/
 
 ### Home
-* https://developers.google.com/sheets/api/reference/rest
-* What is Emma using
+*
 
 ### Search
 * Knowledge graph API: search knowledge graph entities. https://developers.google.com/knowledge-graph/reference/rest/v1/ 
@@ -44,6 +43,13 @@ https://developers.google.com/apis-explorer
 
 ## OpenWeather
 * https://openweathermap.org/api/one-call-3 in use
-* 1000 calls/month for free, then 0.015/100 calls
+* 1000 calls/day for free, then 0.015/100 calls
 * https://openweathermap.org/api/one-call-3#current
 * https://openweathermap.org/api/one-call-3#history_daily_aggregation for historical and daily aggregation
+
+## Spoonacular
+* https://spoonacular.com/food-api/pricing
+* 1 qps and 150 pts/day free
+
+## General + recipe, free sign up 
+* https://www.api-ninjas.com/api/recipe
