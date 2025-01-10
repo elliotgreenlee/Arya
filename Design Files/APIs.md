@@ -51,5 +51,11 @@ https://developers.google.com/apis-explorer
 * https://spoonacular.com/food-api/pricing
 * 1 qps and 150 pts/day free
 
+## Kroger
+* locations https://developer.kroger.com/api-products/api/location-api-public
+* products https://developer.kroger.com/api-products/api/product-api-public
+* user carts https://developer.kroger.com/api-products/api/cart-api-public
+* free?
+
 ## General + recipe, free sign up 
 * https://www.api-ninjas.com/api/recipe

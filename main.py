@@ -20,9 +20,15 @@ API_KEYS_PATH = 'Credentials/api_keys.json'
 ELLIOT_GOOGLE_CREDENTIALS_PATH = 'Credentials/elliot_google_user_token.json'
 CLIENT_GOOGLE_CREDENTIALS_PATH = 'Credentials/google_client.json'
 
+CLIENT_KROGER_CREDENTIALS_PATH = 'Credentials/kroger_client.json'
+
 # Portland, OR
 USER_LATITUDE = 45.5152
 USER_LONGITUDE = -122.6784
+USER_ZIP_CODE = 97215
+# Store Name: Fred Meyer - Hawthorne
+# Address: 3805 Se Hawthorne Blvd, Portland, OR
+USER_KROGER_LOCATION_ID = "70100135"
 
 
 def load_google_credentials(user_credentials_path, api_credentials_path):
@@ -116,6 +122,12 @@ def load_api_keys(file_path):
     with open(file_path, 'r') as file:
         api_keys = json.load(file)
         return api_keys
+
+
+def load_kroger_credentials(file_path):
+    with open(file_path, 'r') as file:
+        kroger_credentials = json.load(file)
+        return kroger_credentials
 
 
 def next_eight_days_weather(api_key, lat, lon):
@@ -294,6 +306,38 @@ def next_week_workout(sheets_service):
         print("No exercise plan for next week.")
 
 
+# Authenticate and get the kroger access token
+def get_access_token(client_id, client_secret):
+    auth_url = "https://api.kroger.com/v1/connect/oauth2/token"
+
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    data = {
+        "grant_type": "client_credentials",
+        "scope": "",  # TODO: Add location scope from json
+    }
+    response = requests.post(auth_url, headers=headers, data=data, auth=(client_id, client_secret))
+    response.raise_for_status()
+    return response.json()["access_token"]
+
+
+# Query the Locations API
+def search_locations(access_token, zip_code):
+    locations_url = "https://api.kroger.com/v1/locations"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json",
+    }
+    params = {
+        "filter.zipCode.near": zip_code,
+        "filter.limit": 5,  # Number of results to return
+    }
+    response = requests.get(locations_url, headers=headers, params=params)
+    response.raise_for_status()
+    return response.json()
+
+
 def main():
     api_keys = load_api_keys(API_KEYS_PATH)
 
@@ -330,6 +374,7 @@ def main():
     print(completion)
     '''
 
+    '''
     # Spoonacular
 
     # Set up the API key and base URL
@@ -360,6 +405,24 @@ def main():
             print(f"Summary: {recipe['summary']}")
         else:
             print("No recipes found.")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+    '''
+
+    # Access kroger locations api
+    kroger_credentials = load_kroger_credentials(CLIENT_KROGER_CREDENTIALS_PATH)
+    kroger_client_id = kroger_credentials['client_id']
+    kroger_client_secret = kroger_credentials['client_secret']
+
+    try:
+        kroger_token = get_access_token(kroger_client_id, kroger_client_secret)
+        locations = search_locations(kroger_token, USER_ZIP_CODE)  # Replace with your zip code
+        for location in locations.get("data", []):
+            print(f"Store Name: {location['name']}")
+            print(f"Location ID: {location['locationId']}")
+            print(
+                f"Address: {location['address']['addressLine1']}, {location['address']['city']}, {location['address']['state']}")
+            print()
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
 
