@@ -1,4 +1,4 @@
-# Data model for workouts
+# Manages exercise planning
 
 from enum import Enum
 
