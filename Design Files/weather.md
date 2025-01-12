@@ -1,0 +1,1 @@
+maybe add https://windy.app/widgets to the website part?
