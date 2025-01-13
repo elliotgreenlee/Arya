@@ -1,45 +1,49 @@
 import requests
-from Utils.utils import load_json
+import os.path
+from KrogerCredentials import KrogerCredentials
+from KrogerFlow import InstalledAppFlow
 
 
-class Kroger:
-    def __init__(self, client_id, client_secret, scope):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.scope = scope
-        self.token = None
-        self.get_access_token()
+class KrogerAPI:
+    def __init__(self, credentials):
+        self.credentials = credentials
 
-    def get_access_token(self):
-        auth_url = "https://api.kroger.com/v1/connect/oauth2/token"
 
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+def load_kroger_credentials(user_credentials_path, api_credentials_path, scopes):
+    # Check if there are stored user credentials
+    if os.path.exists(user_credentials_path):
+        creds = KrogerCredentials.from_authorized_user_file(user_credentials_path, scopes)
 
-        data = {
-            "grant_type": "client_credentials",
-            "scope": self.scope,
-        }
-        try:
-            response = requests.post(auth_url, headers=headers, data=data, auth=(self.client_id, self.client_secret))
-            response.raise_for_status()
-            self.token = response.json()["access_token"]
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
+        if creds and creds.expired and creds.refresh_token:
+            # TODO: pass something in here and implement
+            creds.refresh(Request())
+            # Save the credentials for the next run
+            with open(user_credentials_path, 'w') as token:
+                token.write(creds.to_json())
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file(api_credentials_path, scopes)
+        creds = flow.run_local_server()
+        # Save the credentials for the next run
+        with open(user_credentials_path, 'w') as token:
+            token.write(creds.to_json())
+
+    return creds
 
 
 def example():
+    # TODO: show how to put multiple scopes together instead of dict once figured out
+    scopes = {
+        "cart_scope": '',
+        "locations_scope": '',
+        "products_scope": '',
+        "profile_scope": ''
+    }
+    user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
     kroger_credentials_path = '../Credentials/kroger_client.json'
-    credentials = load_json(kroger_credentials_path)
-    empty_scope = ""
+    credentials = load_kroger_credentials(user_kroger_credentials_path, kroger_credentials_path, scopes)
 
-    kroger = Kroger(credentials['client_id'], credentials['client_secret'], empty_scope)
-    print(kroger.token)
-
-    # TODO: test each scope individually to confirm they work
-    # TODO: test combining scopes into a single oauth request. chatgpt and the kroger documentation suggest
-    #  I can combine them as space separated items in a string, but it doesnt seem to work
+    kroger_api = KrogerAPI(credentials)
+    print(kroger_api.credentials)
 
 
 if __name__ == '__main__':
