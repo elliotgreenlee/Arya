@@ -1,4 +1,3 @@
-import requests
 import os.path
 from KrogerCredentials import KrogerCredentials
 from KrogerFlow import InstalledAppFlow
@@ -15,8 +14,7 @@ def load_kroger_credentials(user_credentials_path, api_credentials_path, scopes)
         creds = KrogerCredentials.from_authorized_user_file(user_credentials_path, scopes)
 
         if creds and creds.expired and creds.refresh_token:
-            # TODO: pass something in here and implement
-            creds.refresh(Request())
+            creds.refresh()
             # Save the credentials for the next run
             with open(user_credentials_path, 'w') as token:
                 token.write(creds.to_json())
@@ -32,15 +30,10 @@ def load_kroger_credentials(user_credentials_path, api_credentials_path, scopes)
 
 def example():
     # TODO: show how to put multiple scopes together instead of dict once figured out
-    scopes = {
-        "cart_scope": '',
-        "locations_scope": '',
-        "products_scope": '',
-        "profile_scope": ''
-    }
+    scope = ""
     user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
     kroger_credentials_path = '../Credentials/kroger_client.json'
-    credentials = load_kroger_credentials(user_kroger_credentials_path, kroger_credentials_path, scopes)
+    credentials = load_kroger_credentials(user_kroger_credentials_path, kroger_credentials_path, scope)
 
     kroger_api = KrogerAPI(credentials)
     print(kroger_api.credentials)

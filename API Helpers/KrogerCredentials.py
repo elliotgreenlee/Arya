@@ -4,16 +4,12 @@ from Utils.utils import load_json
 
 
 class KrogerCredentials:
-    def __init__(self, client_id, client_secret, scopes,
+    def __init__(self, client_id, client_secret, scope,
                  token=None, refresh_token=None, token_type=None, expiry=None):
         self.client_id = client_id
         self.client_secret = client_secret
 
-        self.cart_scope = scopes['cart_scope']
-        self.locations_scope = scopes['locations_scope']
-        self.products_scope = scopes['products_scope']
-        self.profile_scope = scopes['profile_scope']
-
+        self.scope = scope
         self.token = token
         self.refresh_token = refresh_token
         self.token_type = token_type
@@ -30,7 +26,7 @@ class KrogerCredentials:
             return True
 
     @classmethod
-    def from_authorized_user_file(cls, user_credentials_path, scopes=None):
+    def from_authorized_user_file(cls, user_credentials_path, scope=None):
         user_credentials = load_json(user_credentials_path)
         token = user_credentials['token']
         refresh_token = user_credentials['refresh_token']
@@ -39,13 +35,8 @@ class KrogerCredentials:
         client_id = user_credentials['client_id']
         client_secret = user_credentials['client_secret']
 
-        if scopes is None:
-            scopes = {
-                "cart_scope": user_credentials['cart_scope'],
-                "locations_scope": user_credentials['locations_scope'],
-                "products_scope": user_credentials['products_scope'],
-                "profile_scope": user_credentials['profile_scope'],
-            }
+        if scope is None:
+            scope = user_credentials['scope']
 
         if expiry:
             expiry = datetime.strptime(
@@ -59,7 +50,7 @@ class KrogerCredentials:
             expiry=expiry,
             client_id=client_id,
             client_secret=client_secret,
-            scopes=scopes
+            scope=scope
         )
         kroger_creds.user_credentials_path = user_credentials_path
         return kroger_creds
@@ -71,10 +62,7 @@ class KrogerCredentials:
             "token_type": self.token_type,
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "cart_scope": self.cart_scope,
-            "locations_scope": self.locations_scope,
-            "products_scope": self.products_scope,
-            "profile_scope": self.profile_scope,
+            "scope": self.scope,
         }
         if self.expiry:  # flatten expiry timestamp
             prep["expiry"] = self.expiry.isoformat() + "Z"
@@ -83,5 +71,25 @@ class KrogerCredentials:
 
     def refresh(self):
         """Refreshes the access token"""
-        # TODO: do it
-        self.token = ""
+        """
+        oauth2session = OAuth2Session(client_id, token={
+            'access_token': self.token,
+            'refresh_token': self.refresh_token,
+            'token_type': self.token_type,
+            'expires_at': self.expiry,
+        })
+        token_url = "https://api.kroger.com/v1/connect/oauth2/token"
+        new_token = self.oauth2session.refresh_token(
+            token_url=token_url,
+            client_id=self.client_id,
+            client_secret=self.client_secret
+        )
+
+        # Update token details
+        self.token = new_token.get("access_token")
+        self.refresh_token = new_token.get("refresh_token", self.refresh_token)  # Use new refresh token if provided
+        self.token_type = new_token.get("token_type")
+        self.expiry = new_token.get("expires_at")
+        """
+        # TODO: something with maybe some of the above code, or just basic requests library, not sure
+        self.token = {}
