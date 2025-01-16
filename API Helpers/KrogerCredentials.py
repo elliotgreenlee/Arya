@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import json
 from Utils.utils import load_json
+from requests_oauthlib import OAuth2Session
 
 
 class KrogerCredentials:
@@ -39,9 +40,7 @@ class KrogerCredentials:
             scope = user_credentials['scope']
 
         if expiry:
-            expiry = datetime.strptime(
-                expiry.rstrip("Z").split(".")[0], "%Y-%m-%dT%H:%M:%S"
-            )
+            expiry = datetime.strptime(expiry, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
 
         kroger_creds = cls(
             token=token,
@@ -71,25 +70,24 @@ class KrogerCredentials:
 
     def refresh(self):
         """Refreshes the access token"""
-        """
-        oauth2session = OAuth2Session(client_id, token={
-            'access_token': self.token,
-            'refresh_token': self.refresh_token,
-            'token_type': self.token_type,
-            'expires_at': self.expiry,
-        })
-        token_url = "https://api.kroger.com/v1/connect/oauth2/token"
-        new_token = self.oauth2session.refresh_token(
-            token_url=token_url,
+        print("refreshing token")
+        oauth2session = OAuth2Session(
             client_id=self.client_id,
-            client_secret=self.client_secret
+            scope=self.scope,
+        )
+        token_url = "https://api.kroger.com/v1/connect/oauth2/token"
+        extra = {
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+        }
+        new_token = oauth2session.refresh_token(
+            token_url=token_url,
+            refresh_token=self.refresh_token,
+            **extra
         )
 
         # Update token details
-        self.token = new_token.get("access_token")
-        self.refresh_token = new_token.get("refresh_token", self.refresh_token)  # Use new refresh token if provided
-        self.token_type = new_token.get("token_type")
-        self.expiry = new_token.get("expires_at")
-        """
-        # TODO: something with maybe some of the above code, or just basic requests library, not sure
-        self.token = {}
+        self.token = new_token['access_token']
+        self.refresh_token = new_token['refresh_token']
+        self.token_type = new_token['token_type']
+        self.expiry = datetime.utcfromtimestamp(new_token['expires_at'])

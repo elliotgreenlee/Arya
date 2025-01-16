@@ -29,9 +29,6 @@ class KrogerFlow:
 
         client_config = load_json(client_secrets_file)
 
-        # TODO: eventually try to get from function
-        scope = "profile.compact"
-
         if scope:
             client_config['scope'] = scope
 
