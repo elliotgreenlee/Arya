@@ -1,13 +1,13 @@
 from googleapiclient.discovery import build
-from google_utils import GoogleAPI, load_google_credentials
+from google_utils import GoogleAPI
 from datetime import datetime, timedelta
 
 
 class GoogleCalendarAPI(GoogleAPI):
-    def __init__(self, credentials):
-        super().__init__(credentials)
+    def __init__(self, user_credentials_path, client_credentials_path, scope):
+        super().__init__(user_credentials_path, client_credentials_path, scope)
 
-        self.calendar = build('calendar', 'v3', credentials=credentials)
+        self.calendar = build('calendar', 'v3', credentials=self.credentials)
 
     def calendar_events(self, time_min, time_max):
         events_result = self.calendar.events().list(
@@ -64,9 +64,7 @@ def example():
     scope = ['https://www.googleapis.com/auth/calendar.readonly']
     user_google_calendar_credentials_path = '../Credentials/google_calendar_user_token.json'
     google_credentials_path = '../Credentials/google_client.json'
-    credentials = load_google_credentials(user_google_calendar_credentials_path, google_credentials_path, scope)
-
-    google_calendar_api = GoogleCalendarAPI(credentials)
+    google_calendar_api = GoogleCalendarAPI(user_google_calendar_credentials_path, google_credentials_path, scope)
 
     google_calendar_api.past_days(7)
     google_calendar_api.upcoming_days(7)

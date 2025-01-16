@@ -1,13 +1,13 @@
 from googleapiclient.discovery import build
-from google_utils import GoogleAPI, load_google_credentials
+from google_utils import GoogleAPI
 import pandas as pd
 
 
 class GoogleSheetsAPI(GoogleAPI):
-    def __init__(self, credentials):
-        super().__init__(credentials)
+    def __init__(self, user_credentials_path, client_credentials_path, scope):
+        super().__init__(user_credentials_path, client_credentials_path, scope)
 
-        self.sheets = build('sheets', 'v4', credentials=credentials)
+        self.sheets = build('sheets', 'v4', credentials=self.credentials)
 
     def load_sheet_to_dataframe(self, spreadsheet_id, spreadsheet_range, column_types=None):
         spreadsheets = self.sheets.spreadsheets()
@@ -32,14 +32,14 @@ def example():
     scope = ['https://www.googleapis.com/auth/spreadsheets.readonly']
     user_google_sheets_credentials_path = '../Credentials/google_sheets_user_token.json'
     google_credentials_path = '../Credentials/google_client.json'
-    credentials = load_google_credentials(user_google_sheets_credentials_path, google_credentials_path, scope)
+    google_sheets_api = GoogleSheetsAPI(user_google_sheets_credentials_path, google_credentials_path, scope)
 
-    google_sheets_api = GoogleSheetsAPI(credentials)
     # https://docs.google.com/spreadsheets/d/<spreadsheet_id>/edit
     # You will need your own, since it is account based
     spreadsheet_id = '1JFpTX7CfaQ-GYvUSiq6dA397tgVxM1v3x_s2vA_UIeQ'
     spreadsheet_range = 'Weekly Training!A1:X25'
-    google_sheets_api.load_sheet_to_dataframe(spreadsheet_id, spreadsheet_range)
+    data = google_sheets_api.load_sheet_to_dataframe(spreadsheet_id, spreadsheet_range)
+    print(data)
 
 
 if __name__ == '__main__':
