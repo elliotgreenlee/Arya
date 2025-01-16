@@ -4,38 +4,39 @@ from KrogerFlow import InstalledAppFlow
 
 
 class KrogerAPI:
-    def __init__(self, credentials):
-        self.credentials = credentials
+    def __init__(self, user_credentials_path, api_credentials_path, scope):
+        self.user_credentials_path = user_credentials_path
+        self.api_credentials_path = api_credentials_path
+        self.scope = scope
+        self.credentials = self.load_credentials()
 
+    def load_credentials(self):
+        # Check if there are stored user credentials
+        if os.path.exists(self.user_credentials_path):
+            creds = KrogerCredentials.from_authorized_user_file(self.user_credentials_path, self.scope)
 
-def load_kroger_credentials(user_credentials_path, api_credentials_path, scope):
-    # Check if there are stored user credentials
-    if os.path.exists(user_credentials_path):
-        creds = KrogerCredentials.from_authorized_user_file(user_credentials_path, scope)
-
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh()
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh()
+                # Save the credentials for the next run
+                with open(self.user_credentials_path, 'w') as token:
+                    token.write(creds.to_json())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(self.api_credentials_path, self.scope)
+            creds = flow.run_local_server()
             # Save the credentials for the next run
-            with open(user_credentials_path, 'w') as token:
+            with open(self.user_credentials_path, 'w') as token:
                 token.write(creds.to_json())
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file(api_credentials_path, scope)
-        creds = flow.run_local_server()
-        # Save the credentials for the next run
-        with open(user_credentials_path, 'w') as token:
-            token.write(creds.to_json())
 
-    return creds
+        return creds
 
 
 def example():
-    # TODO: show how to put multiple scopes together
-    scope = "profile.compact"
+    scope = "profile.compact product.compact cart.basic:write"
+
     user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
     kroger_credentials_path = '../Credentials/kroger_client.json'
-    credentials = load_kroger_credentials(user_kroger_credentials_path, kroger_credentials_path, scope)
 
-    kroger_api = KrogerAPI(credentials)
+    kroger_api = KrogerAPI(user_kroger_credentials_path, kroger_credentials_path, scope)
     print(kroger_api.credentials)
 
 
