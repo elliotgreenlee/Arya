@@ -33,6 +33,9 @@ https://developers.google.com/apis-explorer
 * text to speech https://platform.openai.com/docs/guides/text-to-speech
 * speech to text https://platform.openai.com/docs/guides/speech-to-text
 * AI assistants https://platform.openai.com/docs/assistants/overview
+* Set usage limits: https://platform.openai.com/settings/organization/limits
+* See usage: https://platform.openai.com/usage
+* Create api keys: https://platform.openai.com/api-keys
 
 ## Things
 * https://github.com/evelion-apps/things-api read only
