@@ -1,34 +1,51 @@
 import requests
+from kroger_utils import KrogerAPI
+import json
 
-def add_to_cart(access_token, customer_id, product_id, quantity):
-    api_url = f"https://api.kroger.com/v1/cart/add"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
-    }
-    data = {
-        "customerId": customer_id,  # Replace with the customer's unique identifier
-        "items": [
-            {
-                "upc": product_id,  # Universal Product Code of the item
-                "quantity": quantity
-            }
-        ]
-    }
 
-    try:
-        response = requests.post(api_url, headers=headers, json=data)
-        response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
-        print("Cart API Response:", response.json())
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return None
+class KrogerCartAPI(KrogerAPI):
+    def __init__(self, user_credentials_path, api_credentials_path, scope):
+        super().__init__(user_credentials_path, api_credentials_path, scope)
 
-# Example Usage
-access_token = "your_access_token_here"  # Replace with your valid access token
-customer_id = "customer_id_here"  # Replace with the actual customer ID
-product_id = "0001111041702"  # Replace with a valid UPC of a product
-quantity = 1  # Quantity of the product to add
+    def add_to_cart(self, product_upc, quantity, modality):
+        api_url = f"https://api.kroger.com/v1/cart/add"
+        headers = {
+            "Authorization": f"Bearer {self.credentials.token}",
+            "Accept": "application/json",
+        }
 
-response = add_to_cart(access_token, customer_id, product_id, quantity)
+        payload = {
+            "items": [
+                {
+                    "quantity": quantity,
+                    "upc": product_upc,
+                    "modality": modality
+                }
+            ]
+        }
+
+        # Make the PUT request
+        response = requests.put(api_url, json=payload, headers=headers)
+        if response.status_code == 204:
+            cart_response = "Success"
+        else:
+            cart_response = response.json()
+        return cart_response
+
+
+def example():
+    scope = "profile.compact product.compact cart.basic:write"
+    user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
+    kroger_credentials_path = '../Credentials/kroger_client.json'
+    kroger_cart_api = KrogerCartAPI(user_kroger_credentials_path, kroger_credentials_path, scope)
+
+    # Fred Meyer 2% Reduced Fat Milk Gallon
+    product_upc = "0001111041550"
+    quantity = 1
+    modality = "DELIVERY"
+    cart_response = kroger_cart_api.add_to_cart(product_upc, quantity, modality)
+    print(json.dumps(cart_response, indent=4))
+
+
+if __name__ == '__main__':
+    example()
