@@ -34,8 +34,8 @@ class GoogleAPI:
 def example():
     scope = ['https://www.googleapis.com/auth/calendar.readonly',
              'https://www.googleapis.com/auth/spreadsheets.readonly']
-    user_google_credentials_path = '../Credentials/google_user_token.json'
-    google_credentials_path = '../Credentials/google_client.json'
+    user_google_credentials_path = '../../Credentials/google_user_token.json'
+    google_credentials_path = '../../Credentials/google_client.json'
 
     google_api = GoogleAPI(user_google_credentials_path, google_credentials_path, scope)
     print(google_api.credentials)

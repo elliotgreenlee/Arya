@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-from google_utils import GoogleAPI
+from .google_utils import GoogleAPI
 import pandas as pd
 
 
@@ -30,8 +30,8 @@ class GoogleSheetsAPI(GoogleAPI):
 
 def example():
     scope = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-    user_google_sheets_credentials_path = '../Credentials/google_sheets_user_token.json'
-    google_credentials_path = '../Credentials/google_client.json'
+    user_google_sheets_credentials_path = '../../Credentials/google_sheets_user_token.json'
+    google_credentials_path = '../../Credentials/google_client.json'
     google_sheets_api = GoogleSheetsAPI(user_google_sheets_credentials_path, google_credentials_path, scope)
 
     # https://docs.google.com/spreadsheets/d/<spreadsheet_id>/edit

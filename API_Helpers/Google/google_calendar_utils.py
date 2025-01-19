@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-from google_utils import GoogleAPI
+from .google_utils import GoogleAPI
 from datetime import datetime, timedelta
 
 
@@ -62,8 +62,8 @@ class GoogleCalendarAPI(GoogleAPI):
 
 def example():
     scope = ['https://www.googleapis.com/auth/calendar.readonly']
-    user_google_calendar_credentials_path = '../Credentials/google_calendar_user_token.json'
-    google_credentials_path = '../Credentials/google_client.json'
+    user_google_calendar_credentials_path = '../../Credentials/google_calendar_user_token.json'
+    google_credentials_path = '../../Credentials/google_client.json'
     google_calendar_api = GoogleCalendarAPI(user_google_calendar_credentials_path, google_credentials_path, scope)
 
     google_calendar_api.past_days(7)
