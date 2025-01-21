@@ -1,5 +1,5 @@
 import requests
-from kroger_utils import KrogerAPI
+from API_Helpers.Kroger.kroger_utils import KrogerAPI
 import json
 
 
@@ -35,8 +35,8 @@ class KrogerCartAPI(KrogerAPI):
 
 def example():
     scope = "profile.compact product.compact cart.basic:write"
-    user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
-    kroger_credentials_path = '../Credentials/kroger_client.json'
+    user_kroger_credentials_path = '../../Credentials/kroger_user_token.json'
+    kroger_credentials_path = '../../Credentials/kroger_client.json'
     kroger_cart_api = KrogerCartAPI(user_kroger_credentials_path, kroger_credentials_path, scope)
 
     # Fred Meyer 2% Reduced Fat Milk Gallon

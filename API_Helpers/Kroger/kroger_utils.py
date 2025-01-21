@@ -1,6 +1,6 @@
 import os.path
-from KrogerCredentials import KrogerCredentials
-from KrogerFlow import InstalledAppFlow
+from .KrogerCredentials import KrogerCredentials
+from API_Helpers.Kroger.KrogerFlow import InstalledAppFlow
 
 
 class KrogerAPI:
@@ -33,8 +33,8 @@ class KrogerAPI:
 def example():
     scope = "profile.compact product.compact cart.basic:write"
 
-    user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
-    kroger_credentials_path = '../Credentials/kroger_client.json'
+    user_kroger_credentials_path = '../../Credentials/kroger_user_token.json'
+    kroger_credentials_path = '../../Credentials/kroger_client.json'
 
     kroger_api = KrogerAPI(user_kroger_credentials_path, kroger_credentials_path, scope)
     print(kroger_api.credentials)

@@ -1,5 +1,6 @@
 from Utils.utils import load_json
 import requests
+import json
 
 
 class SpoonacularAPI:
@@ -13,22 +14,10 @@ class SpoonacularAPI:
             "number": recipe_count  # Number of random recipes to retrieve
         }
 
-        try:
-            response = requests.get(endpoint, params=params)
-            response.raise_for_status()
-
-            data = response.json()
-
-            if "recipes" in data and data["recipes"]:
-                for recipe in data["recipes"]:
-                    print(f"Recipe Name: {recipe['title']}")
-                    print(f"Ready in Minutes: {recipe['readyInMinutes']}")
-                    print(f"Servings: {recipe['servings']}")
-                    print(f"Summary: {recipe['summary']}")
-            else:
-                print("No recipes found.")
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
+        response = requests.get(endpoint, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data.get('recipes', [])
 
 
 def example():
@@ -36,8 +25,11 @@ def example():
     api_keys = load_json(spoonacular_credentials_path)
 
     spoonacular = SpoonacularAPI(api_keys['spoonacular_api_key'])
-    recipe_count = 1
-    spoonacular.random_recipes(recipe_count)
+    recipe_count = 2
+    recipes = spoonacular.random_recipes(recipe_count)
+
+    for recipe in recipes:
+        print(json.dumps(recipe, indent=4))
 
 
 if __name__ == '__main__':

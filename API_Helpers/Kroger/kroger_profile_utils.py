@@ -1,4 +1,4 @@
-from kroger_utils import KrogerAPI
+from API_Helpers.Kroger.kroger_utils import KrogerAPI
 import requests
 import json
 
@@ -25,8 +25,8 @@ class KrogerProfileAPI(KrogerAPI):
 
 def example():
     scope = "profile.compact product.compact cart.basic:write"
-    user_kroger_credentials_path = '../Credentials/kroger_user_token.json'
-    kroger_credentials_path = '../Credentials/kroger_client.json'
+    user_kroger_credentials_path = '../../Credentials/kroger_user_token.json'
+    kroger_credentials_path = '../../Credentials/kroger_client.json'
     kroger_profile_api = KrogerProfileAPI(user_kroger_credentials_path, kroger_credentials_path, scope)
 
     profile = kroger_profile_api.get_customer_profile()

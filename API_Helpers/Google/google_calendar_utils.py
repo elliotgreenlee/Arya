@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-from .google_utils import GoogleAPI
+from API_Helpers.Google.google_utils import GoogleAPI
 from datetime import datetime, timedelta
 
 

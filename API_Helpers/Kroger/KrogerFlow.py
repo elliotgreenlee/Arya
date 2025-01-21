@@ -2,7 +2,7 @@ import webbrowser
 import wsgiref.simple_server
 import wsgiref.util
 from Utils.utils import load_json
-from KrogerCredentials import KrogerCredentials
+from API_Helpers.Kroger.KrogerCredentials import KrogerCredentials
 from requests_oauthlib import OAuth2Session
 from datetime import datetime
 

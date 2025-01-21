@@ -23,7 +23,7 @@ class GoogleAPI:
                     token.write(creds.to_json())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(self.api_credentials_path, self.scope)
-            creds = flow.run_local_server()
+            creds = flow.run_local_server(port=8082)
             # Save the credentials for the next run
             with open(self.user_credentials_path, 'w') as token:
                 token.write(creds.to_json())
